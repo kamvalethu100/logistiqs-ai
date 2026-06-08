@@ -1,4 +1,4 @@
-import { defineSchema } from "drizzle-orm/better-sqlite3";
+// Drizzle schema for Logistiqs AI
 import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
 
 // ---- Leads ----
@@ -14,7 +14,7 @@ export const leads = sqliteTable("leads", {
   score: integer("score").default(0),
   source: text("source"),
   notes: text("notes"),
-  status: text("status").default("new").$type<"new" | "contacted" | "qualified" | "disqualified" | "converted">(),
+  status: text("status").default("new"),
   discoveredAt: text("discovered_at").default("datetime('now')"),
   updatedAt: text("updated_at").default("datetime('now')"),
 });
@@ -24,9 +24,9 @@ export const templates = sqliteTable("templates", {
   id: text("id").primaryKey().$default(() => crypto.randomUUID().replace(/-/g, "")),
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
-  category: text("category").notNull().$type<"freight" | "courier" | "warehousing">(),
+  category: text("category").notNull(),
   description: text("description"),
-  tier: text("tier").default("starter").$type<"starter" | "professional" | "enterprise">(),
+  tier: text("tier").default("starter"),
   priceZar: real("price_zar").notNull(),
   depositZar: real("deposit_zar").notNull(),
   features: text("features"),
@@ -46,10 +46,7 @@ export const deals = sqliteTable("deals", {
   contactName: text("contact_name"),
   contactEmail: text("contact_email"),
   contactPhone: text("contact_phone"),
-  status: text("status").default("matched").$type<
-    "matched" | "preview_sent" | "preview_opened" | "deposit_pending" |
-    "deposit_received" | "in_progress" | "completed" | "declined" | "cancelled"
-  >(),
+  status: text("status").default("matched"),
   previewToken: text("preview_token").unique(),
   previewUrl: text("preview_url"),
   previewSentAt: text("preview_sent_at"),
@@ -83,8 +80,8 @@ export const payments = sqliteTable("payments", {
   id: text("id").primaryKey().$default(() => crypto.randomUUID().replace(/-/g, "")),
   dealId: text("deal_id").notNull().references(() => deals.id),
   amountZar: real("amount_zar").notNull(),
-  type: text("type").notNull().$type<"deposit" | "balance" | "maintenance">(),
-  method: text("method").default("eft").$type<"eft" | "cash" | "card">(),
+  type: text("type").notNull(),
+  method: text("method").default("eft"),
   proofFile: text("proof_file"),
   proofUploadedAt: text("proof_uploaded_at"),
   verified: integer("verified").default(0),
@@ -103,7 +100,7 @@ export const sites = sqliteTable("sites", {
   domainUrl: text("domain_url"),
   hostingStart: text("hosting_start"),
   hostingEnd: text("hosting_end"),
-  status: text("status").default("building").$type<"building" | "staging" | "live" | "suspended" | "cancelled">(),
+  status: text("status").default("building"),
   maintenancePlan: integer("maintenance_plan").default(0),
   lastBackupAt: text("last_backup_at"),
   createdAt: text("created_at").default("datetime('now')"),
@@ -116,7 +113,7 @@ export const adminUsers = sqliteTable("admin_users", {
   username: text("username").notNull().unique(),
   email: text("email").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
-  role: text("role").default("admin").$type<"admin" | "superadmin">(),
+  role: text("role").default("admin"),
   isActive: integer("is_active").default(1),
   lastLoginAt: text("last_login_at"),
   createdAt: text("created_at").default("datetime('now')"),

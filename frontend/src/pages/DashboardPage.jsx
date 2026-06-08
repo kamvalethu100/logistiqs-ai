@@ -1,46 +1,175 @@
 import { useState, useEffect } from "react";
 import api from "../api/client";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  LineChart, Line, AreaChart, Area
+} from "recharts";
+import {
+  Users, TrendingUp, DollarSign, CheckCircle, Target, Activity
+} from "lucide-react";
+
+// Fallback sample data when API not available
+const sampleRevenueData = [
+  { month: "Jan", revenue: 0 }, { month: "Feb", revenue: 0 },
+  { month: "Mar", revenue: 0 }, { month: "Apr", revenue: 0 },
+  { month: "May", revenue: 0 }, { month: "Jun", revenue: 0 },
+  { month: "Jul", revenue: 0 }, { month: "Aug", revenue: 0 },
+  { month: "Sep", revenue: 0 }, { month: "Oct", revenue: 0 },
+  { month: "Nov", revenue: 0 }, { month: "Dec", revenue: 0 },
+];
 
 export default function DashboardPage() {
   const [stats, setStats] = useState(null);
+  const [revenueData, setRevenueData] = useState(sampleRevenueData);
+  const [activities, setActivities] = useState([]);
 
   useEffect(() => {
-    api.get("/dashboard/stats").then((res) => setStats(res.data)).catch(() => {});
+    api.get("/dashboard/stats")
+      .then((res) => setStats(res.data))
+      .catch(() => setStats({ leadsThisWeek: 0, activeDeals: 0, conversionRate: 0, revenueMTD: 0, totalLeads: 0, completedProjects: 0, leadsChange: 0, revenueChange: 0, conversionChange: 0 }));
+    api.get("/dashboard/revenue")
+      .then((res) => setRevenueData(res.data))
+      .catch(() => {});
+    api.get("/dashboard/activity")
+      .then((res) => setActivities(res.data))
+      .catch(() => {});
   }, []);
 
-  if (!stats) return <div className="flex items-center" style={{ justifyContent: "center", padding: 48 }}><div className="spinner" /></div>;
+  if (!stats) {
+    return (
+      <div className="flex items-center" style={{ justifyContent: "center", padding: 48 }}>
+        <div className="spinner" />
+      </div>
+    );
+  }
+
+  const kpis = [
+    { label: "Leads This Week", value: stats.leadsThisWeek || 0, icon: Target, color: "#1a365d", bg: "#dbeafe", change: stats.leadsChange, prefix: "" },
+    { label: "Active Deals", value: stats.activeDeals || 0, icon: Briefcase, color: "#d97706", bg: "#fef3c7", change: null, prefix: "" },
+    { label: "Conversion Rate", value: `${stats.conversionRate || 0}%`, icon: TrendingUp, color: "#16a34a", bg: "#dcfce7", change: stats.conversionChange, prefix: "" },
+    { label: "Revenue (MTD)", value: `R${(stats.revenueMTD || 0).toLocaleString()}`, icon: DollarSign, color: "#d97706", bg: "#fef3c7", change: stats.revenueChange, prefix: "" },
+    { label: "Total Leads", value: stats.totalLeads || 0, icon: Users, color: "#1a365d", bg: "#dbeafe", change: null, prefix: "" },
+    { label: "Completed", value: stats.completedProjects || 0, icon: CheckCircle, color: "#16a34a", bg: "#dcfce7", change: null, prefix: "" },
+  ];
+
+  const sampleActivities = activities.length > 0 ? activities : [
+    { id: 1, title: "Welcome to Logistiqs AI", description: "Dashboard is ready. Connect your backend API to see live data.", time: "now", type: "info" },
+    { id: 2, title: "System Online", description: "Admin dashboard is fully operational.", time: "just now", type: "success" },
+  ];
+
+  const activityList = activities.length > 0 ? activities : sampleActivities;
 
   return (
-    <div>
-      <h2 style={{ marginBottom: 24, fontSize: 22 }}>Dashboard</h2>
+    <div className="fade-in">
+      <div className="flex items-center justify-between mb-4">
+        <h2 style={{ fontSize: 22, fontWeight: 700 }}>Dashboard</h2>
+        <span className="text-sm text-muted">Last updated: today</span>
+      </div>
+
+      {/* KPI Cards */}
       <div className="kpi-grid">
-        <div className="kpi-card">
-          <div className="kpi-card-label">Leads This Week</div>
-          <div className="kpi-card-value">{stats.leadsThisWeek || 0}</div>
+        {kpis.map((kpi, idx) => {
+          const Icon = kpi.icon;
+          return (
+            <div key={idx} className="kpi-card">
+              <div className="kpi-card-icon" style={{ background: kpi.bg }}>
+                <Icon size={20} color={kpi.color} />
+              </div>
+              <div className="kpi-card-label">{kpi.label}</div>
+              <div className="kpi-card-value">{kpi.value}</div>
+              {kpi.change !== null && kpi.change !== undefined && (
+                <div className={`kpi-card-change ${kpi.change >= 0 ? "up" : "down"}`}>
+                  {kpi.change >= 0 ? "↑" : "↓"} {Math.abs(kpi.change)}% vs last week
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
+        {/* Revenue Chart */}
+        <div className="chart-container">
+          <h3 className="chart-title">Revenue Trend</h3>
+          <div style={{ width: "100%", height: 280 }}>
+            <ResponsiveContainer>
+              <AreaChart data={revenueData}>
+                <defs>
+                  <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#1a365d" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#1a365d" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip formatter={(v) => [`R${(v || 0).toLocaleString()}`, "Revenue"]} />
+                <Area type="monotone" dataKey="revenue" stroke="#1a365d" fill="url(#colorRev)" strokeWidth={2} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </div>
-        <div className="kpi-card">
-          <div className="kpi-card-label">Active Deals</div>
-          <div className="kpi-card-value">{stats.activeDeals || 0}</div>
-        </div>
-        <div className="kpi-card">
-          <div className="kpi-card-label">Conversion Rate</div>
-          <div className="kpi-card-value">{stats.conversionRate || 0}%</div>
-        </div>
-        <div className="kpi-card">
-          <div className="kpi-card-label">Revenue (MTD)</div>
-          <div className="kpi-card-value">R{stats.revenueMTD?.toLocaleString() || 0}</div>
+
+        {/* Activity Feed */}
+        <div className="chart-container">
+          <h3 className="chart-title">
+            <Activity size={16} style={{ marginRight: 6, verticalAlign: "middle" }} />
+            Recent Activity
+          </h3>
+          <ul className="activity-feed">
+            {activityList.map((act) => (
+              <li key={act.id} className="activity-item">
+                <div
+                  className="activity-icon"
+                  style={{
+                    background: act.type === "success" ? "var(--success-light)" :
+                      act.type === "warning" ? "var(--warning-light)" : "var(--primary-light)"
+                  }}
+                >
+                  <Activity size={14} color={
+                    act.type === "success" ? "var(--success)" :
+                    act.type === "warning" ? "var(--warning)" : "var(--primary)"
+                  } />
+                </div>
+                <div className="activity-content">
+                  <div className="activity-title">{act.title}</div>
+                  {act.description && <div className="text-sm text-muted">{act.description}</div>}
+                  <div className="activity-time">{act.time || act.createdAt || ""}</div>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-        <div className="chart-container">
-          <h3 className="chart-title">Pipeline Funnel</h3>
-          <div className="text-sm text-muted">Deal pipeline overview will render here</div>
-        </div>
-        <div className="chart-container">
-          <h3 className="chart-title">Recent Activity</h3>
-          <div className="text-sm text-muted">Latest activity feed will appear here</div>
+
+      {/* Pipeline Snapshot */}
+      <div className="chart-container" style={{ marginTop: 16 }}>
+        <h3 className="chart-title">Pipeline Snapshot</h3>
+        <div style={{ width: "100%", height: 200 }}>
+          <ResponsiveContainer>
+            <BarChart
+              data={[
+                { stage: "Matched", count: stats.pipelineMatched || 0 },
+                { stage: "Preview", count: stats.pipelinePreview || 0 },
+                { stage: "Deposit", count: stats.pipelineDeposit || 0 },
+                { stage: "In Progress", count: stats.pipelineProgress || 0 },
+                { stage: "Completed", count: stats.pipelineCompleted || 0 },
+              ]}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="stage" tick={{ fontSize: 11 }} />
+              <YAxis tick={{ fontSize: 11 }} />
+              <Tooltip />
+              <Bar dataKey="count" fill="#1a365d" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
     </div>
   );
+}
+
+function Briefcase() {
+  const { Briefcase: Icon } = require("lucide-react");
+  return <Icon />;
 }
