@@ -1,0 +1,83 @@
+/* ===== Logistiqs AI — Template A: Freight & Transport ===== */
+/* CSS Custom Properties — Animation & Design Tokens        */
+
+:root {
+  /* ─── Color Scheme ─── */
+  --color-primary:       #1a365d;
+  --color-primary-light: #2b6cb0;
+  --color-primary-dark:  #0f2440;
+  --color-accent:        #dd6b20;
+  --color-accent-light:  #ed8936;
+  --color-accent-dark:   #c05621;
+  --color-success:       #38a169;
+  --color-warning:       #d69e2e;
+  --color-danger:        #e53e3e;
+  --color-bg:            #f7fafc;
+  --color-bg-alt:        #edf2f7;
+  --color-bg-card:       #ffffff;
+  --color-text:          #1a202c;
+  --color-text-muted:    #718096;
+  --color-text-light:    #a0aec0;
+  --color-border:        #e2e8f0;
+  --color-border-light:  #edf2f7;
+
+  /* ─── Animation Duration ─── */
+  --anim-duration-fast:   150ms;
+  --anim-duration-normal: 300ms;
+  --anim-duration-slow:   600ms;
+  --anim-duration-xslow:  1000ms;
+
+  /* ─── Animation Easing ─── */
+  --anim-easing-bounce:  cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --anim-easing-smooth:  cubic-bezier(0.4, 0, 0.2, 1);
+  --anim-easing-spring:  cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --anim-easing-linear:  linear;
+
+  /* ─── Typography ─── */
+  --font-sans:  'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono:  'JetBrains Mono', 'Fira Code', monospace;
+
+  --text-xs:    0.75rem;
+  --text-sm:    0.875rem;
+  --text-base:  1rem;
+  --text-lg:    1.125rem;
+  --text-xl:    1.25rem;
+  --text-2xl:   1.5rem;
+  --text-3xl:   1.875rem;
+  --text-4xl:   2.25rem;
+  --text-5xl:   3rem;
+
+  /* ─── Spacing ─── */
+  --space-xs:   0.25rem;
+  --space-sm:   0.5rem;
+  --space-md:   1rem;
+  --space-lg:   1.5rem;
+  --space-xl:   2rem;
+  --space-2xl:  3rem;
+  --space-3xl:  4rem;
+  --space-4xl:  6rem;
+
+  /* ─── Layout ─── */
+  --container-max:   1200px;
+  --container-pad:   var(--space-lg);
+  --section-pad-y:   var(--space-3xl);
+  --hero-pad-y:      var(--space-4xl);
+  --nav-height:      4rem;
+
+  /* ─── Border Radius ─── */
+  --radius-sm:   0.25rem;
+  --radius-md:   0.5rem;
+  --radius-lg:   0.75rem;
+  --radius-xl:   1rem;
+  --radius-full: 9999px;
+
+  /* ─── Shadows ─── */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1);
+
+  --shadow-glow-blue:  0 0 15px rgba(43, 108, 176, 0.3);
+  --shadow-glow-amber: 0 0 15px rgba(221, 107, 32, 0.2);
+  --shadow-glow-green: 0 0 15px rgba(56, 161, 105, 0.3);
+}

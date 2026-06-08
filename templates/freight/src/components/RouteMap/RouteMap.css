@@ -1,0 +1,62 @@
+.route-section {
+  background: var(--color-bg);
+  padding: var(--section-pad-y) 0;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: var(--space-2xl);
+}
+
+.section-header h2 {
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: var(--space-sm);
+}
+
+.section-header p {
+  color: var(--color-text-muted);
+  font-size: var(--text-lg);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.route-map-container {
+  max-width: 800px;
+  margin: 0 auto;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  background: white;
+}
+
+.route-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Route path drawing animation */
+.route-solid {
+  animation: draw-line 2s var(--anim-easing-smooth) forwards;
+  animation-delay: 0.3s;
+}
+
+/* Dashed line movement */
+.route-path {
+  animation: dash-move 1.5s linear infinite;
+}
+
+/* Truck along path */
+.route-truck {
+  offset-path: path("M 100 300 Q 250 100 400 200 Q 550 300 700 150");
+  offset-distance: 0%;
+  animation: truck-move 4s var(--anim-easing-smooth) infinite;
+}
+
+/* Waypoint pulse */
+.waypoint circle:first-child {
+  animation: waypoint-pulse 2s ease-in-out infinite;
+  transform-origin: center;
+}
