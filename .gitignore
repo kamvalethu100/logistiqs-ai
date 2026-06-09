@@ -6,3 +6,4 @@ dist
 .DS_Store
 uploads/payments/*
 !uploads/payments/.gitkeep
+*.db-*
