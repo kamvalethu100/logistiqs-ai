@@ -1,14 +1,12 @@
 import { useState, useEffect } from "react";
 import api from "../api/client";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line, AreaChart, Area
+  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from "recharts";
 import {
-  Users, TrendingUp, DollarSign, CheckCircle, Target, Activity
+  Users, TrendingUp, DollarSign, CheckCircle, Target, Activity, Briefcase
 } from "lucide-react";
 
-// Fallback sample data when API not available
 const sampleRevenueData = [
   { month: "Jan", revenue: 0 }, { month: "Feb", revenue: 0 },
   { month: "Mar", revenue: 0 }, { month: "Apr", revenue: 0 },
@@ -26,7 +24,12 @@ export default function DashboardPage() {
   useEffect(() => {
     api.get("/dashboard/stats")
       .then((res) => setStats(res.data))
-      .catch(() => setStats({ leadsThisWeek: 0, activeDeals: 0, conversionRate: 0, revenueMTD: 0, totalLeads: 0, completedProjects: 0, leadsChange: 0, revenueChange: 0, conversionChange: 0 }));
+      .catch(() => setStats({
+        leadsThisWeek: 0, activeDeals: 0, conversionRate: 0, revenueMTD: 0,
+        totalLeads: 0, completedProjects: 0, leadsChange: 0, revenueChange: 0,
+        conversionChange: 0, pipelineMatched: 0, pipelinePreview: 0, pipelineDeposit: 0,
+        pipelineProgress: 0, pipelineCompleted: 0
+      }));
     api.get("/dashboard/revenue")
       .then((res) => setRevenueData(res.data))
       .catch(() => {});
@@ -44,29 +47,35 @@ export default function DashboardPage() {
   }
 
   const kpis = [
-    { label: "Leads This Week", value: stats.leadsThisWeek || 0, icon: Target, color: "#1a365d", bg: "#dbeafe", change: stats.leadsChange, prefix: "" },
-    { label: "Active Deals", value: stats.activeDeals || 0, icon: Briefcase, color: "#d97706", bg: "#fef3c7", change: null, prefix: "" },
-    { label: "Conversion Rate", value: `${stats.conversionRate || 0}%`, icon: TrendingUp, color: "#16a34a", bg: "#dcfce7", change: stats.conversionChange, prefix: "" },
-    { label: "Revenue (MTD)", value: `R${(stats.revenueMTD || 0).toLocaleString()}`, icon: DollarSign, color: "#d97706", bg: "#fef3c7", change: stats.revenueChange, prefix: "" },
-    { label: "Total Leads", value: stats.totalLeads || 0, icon: Users, color: "#1a365d", bg: "#dbeafe", change: null, prefix: "" },
-    { label: "Completed", value: stats.completedProjects || 0, icon: CheckCircle, color: "#16a34a", bg: "#dcfce7", change: null, prefix: "" },
+    { label: "Leads This Week", value: stats.leadsThisWeek || 0, icon: Target, color: "#1a365d", bg: "#dbeafe", change: stats.leadsChange },
+    { label: "Active Deals", value: stats.activeDeals || 0, icon: Briefcase, color: "#d97706", bg: "#fef3c7", change: null },
+    { label: "Conversion Rate", value: `${stats.conversionRate || 0}%`, icon: TrendingUp, color: "#16a34a", bg: "#dcfce7", change: stats.conversionChange },
+    { label: "Revenue (MTD)", value: `R${(stats.revenueMTD || 0).toLocaleString()}`, icon: DollarSign, color: "#d97706", bg: "#fef3c7", change: stats.revenueChange },
+    { label: "Total Leads", value: stats.totalLeads || 0, icon: Users, color: "#1a365d", bg: "#dbeafe", change: null },
+    { label: "Completed", value: stats.completedProjects || 0, icon: CheckCircle, color: "#16a34a", bg: "#dcfce7", change: null },
   ];
 
-  const sampleActivities = activities.length > 0 ? activities : [
+  const sampleActivities = [
     { id: 1, title: "Welcome to Logistiqs AI", description: "Dashboard is ready. Connect your backend API to see live data.", time: "now", type: "info" },
     { id: 2, title: "System Online", description: "Admin dashboard is fully operational.", time: "just now", type: "success" },
   ];
 
   const activityList = activities.length > 0 ? activities : sampleActivities;
 
+  const pipelineData = [
+    { stage: "Matched", count: stats.pipelineMatched || 0 },
+    { stage: "Preview", count: stats.pipelinePreview || 0 },
+    { stage: "Deposit", count: stats.pipelineDeposit || 0 },
+    { stage: "In Progress", count: stats.pipelineProgress || 0 },
+    { stage: "Completed", count: stats.pipelineCompleted || 0 },
+  ];
+
   return (
     <div className="fade-in">
       <div className="flex items-center justify-between mb-4">
         <h2 style={{ fontSize: 22, fontWeight: 700 }}>Dashboard</h2>
-        <span className="text-sm text-muted">Last updated: today</span>
       </div>
 
-      {/* KPI Cards */}
       <div className="kpi-grid">
         {kpis.map((kpi, idx) => {
           const Icon = kpi.icon;
@@ -147,15 +156,7 @@ export default function DashboardPage() {
         <h3 className="chart-title">Pipeline Snapshot</h3>
         <div style={{ width: "100%", height: 200 }}>
           <ResponsiveContainer>
-            <BarChart
-              data={[
-                { stage: "Matched", count: stats.pipelineMatched || 0 },
-                { stage: "Preview", count: stats.pipelinePreview || 0 },
-                { stage: "Deposit", count: stats.pipelineDeposit || 0 },
-                { stage: "In Progress", count: stats.pipelineProgress || 0 },
-                { stage: "Completed", count: stats.pipelineCompleted || 0 },
-              ]}
-            >
+            <BarChart data={pipelineData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="stage" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} />
@@ -167,9 +168,4 @@ export default function DashboardPage() {
       </div>
     </div>
   );
-}
-
-function Briefcase() {
-  const { Briefcase: Icon } = require("lucide-react");
-  return <Icon />;
 }
