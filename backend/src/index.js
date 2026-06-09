@@ -2,37 +2,49 @@ import express from "express";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
+import config from "./config/env.js";
+
 import authRoutes from "./routes/auth.js";
-import leadRoutes from "./routes/leads.js";
-import templateRoutes from "./routes/templates.js";
-import dealRoutes from "./routes/deals.js";
-import paymentRoutes from "./routes/payments.js";
-import dashboardRoutes from "./routes/dashboard.js";
+import leadsRoutes from "./routes/leads.js";
+import dealsRoutes from "./routes/deals.js";
+import templatesRoutes from "./routes/templates.js";
+import paymentsRoutes from "./routes/payments.js";
+import sitesRoutes from "./routes/sites.js";
 import previewRoutes from "./routes/preview.js";
+import dashboardRoutes from "./routes/dashboard.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
-const PORT = process.env.PORT || 3001;
 
+// Middleware
 app.use(cors());
 app.use(express.json());
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+app.use(express.urlencoded({ extended: true }));
 
-// Routes
+// API Routes
 app.use("/api/v1/auth", authRoutes);
-app.use("/api/v1/leads", leadRoutes);
-app.use("/api/v1/templates", templateRoutes);
-app.use("/api/v1/deals", dealRoutes);
-app.use("/api/v1/payments", paymentRoutes);
+app.use("/api/v1/leads", leadsRoutes);
+app.use("/api/v1/deals", dealsRoutes);
+app.use("/api/v1/templates", templatesRoutes);
+app.use("/api/v1/payments", paymentsRoutes);
+app.use("/api/v1/sites", sitesRoutes);
 app.use("/api/v1/dashboard", dashboardRoutes);
-app.use("/api/v1/preview", previewRoutes);
 
-app.get("/health", (req, res) => {
-  res.json({ status: "ok" });
+// Public Preview endpoint
+app.use("/preview", previewRoutes);
+
+// Health check
+app.get("/api/health", (req, res) => res.json({ status: "ok", timestamp: new Date().toISOString() }));
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: "Internal server error" });
 });
 
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server listening on http://0.0.0.0:${PORT}`);
+// Start
+app.listen(config.port, "0.0.0.0", () => {
+  console.log(`Logistiqs AI API running on http://0.0.0.0:${config.port}`);
 });
+
+export default app;

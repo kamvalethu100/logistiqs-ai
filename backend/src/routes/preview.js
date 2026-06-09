@@ -1,43 +1,27 @@
-import express from "express";
+import { Router } from "express";
 import { db } from "../db/index.js";
 import { deals, previewSessions } from "../db/schema.js";
 import { eq } from "drizzle-orm";
-import { v4 as uuidv4 } from "uuid";
 
-const router = express.Router();
+const router = Router();
 
 router.get("/:token", async (req, res) => {
   try {
-    const deal = await db.query.deals.findFirst({
-      where: eq(deals.previewToken, req.params.token),
-    });
-
+    const [deal] = await db.select().from(deals).where(eq(deals.previewToken, req.params.token)).limit(1);
     if (!deal) return res.status(404).json({ error: "Preview not found" });
+    await db.insert(previewSessions).values({ dealId: deal.id, ipAddress: req.ip, userAgent: req.headers["user-agent"] || "" });
+    if (!deal.previewOpenedAt) await db.update(deals).set({ previewOpenedAt: "datetime('now')", status: "preview_opened" }).where(eq(deals.id, deal.id));
+    res.redirect(`${process.env.BASE_URL || "http://localhost:5173"}/preview/${req.params.token}`);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
 
-    // Track session
-    await db.insert(previewSessions).values({
-      id: uuidv4().replace(/-/g, ""),
-      dealId: deal.id,
-      ipAddress: req.ip,
-      userAgent: req.get("User-Agent"),
-    });
-
-    // Update deal status if it's the first time
-    if (deal.status === "preview_sent") {
-      await db.update(deals)
-        .set({ 
-          status: "preview_opened",
-          previewOpenedAt: new Date().toISOString()
-        })
-        .where(eq(deals.id, deal.id));
-    }
-
-    // In a real app, we'd render the template here.
-    // For now, we'll return the deal info which the frontend will use to render.
-    res.json(deal);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+router.post("/:token/interest", async (req, res) => {
+  try {
+    const [deal] = await db.select().from(deals).where(eq(deals.previewToken, req.params.token)).limit(1);
+    if (!deal) return res.status(404).json({ error: "Preview not found" });
+    await db.update(deals).set({ notes: `Lead interested: ${JSON.stringify(req.body)}`, status: "deposit_pending" }).where(eq(deals.id, deal.id));
+    res.json({ message: "Interest recorded" });
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 export default router;

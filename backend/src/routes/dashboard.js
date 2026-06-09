@@ -1,32 +1,20 @@
-import express from "express";
+import { Router } from "express";
 import { db } from "../db/index.js";
-import { leads, deals, payments } from "../db/schema.js";
-import { count, sum, sql } from "drizzle-orm";
+import { deals, leads, payments } from "../db/schema.js";
 import { authenticate } from "../middleware/auth.js";
+import { eq, sql, count } from "drizzle-orm";
 
-const router = express.Router();
+const router = Router();
+router.use(authenticate);
 
-router.get("/stats", authenticate, async (req, res) => {
+router.get("/stats", async (req, res) => {
   try {
-    const leadsCount = await db.select({ value: count() }).from(leads);
-    const dealsCount = await db.select({ value: count() }).from(deals);
-    const totalRevenue = await db.select({ value: sum(deals.totalPaid) }).from(deals);
-    
-    // Simple conversion rate: completed deals / total deals
-    const completedDeals = await db.select({ value: count() }).from(deals).where(sql`status = 'completed'`);
-    const conversionRate = dealsCount[0].value > 0 
-      ? (completedDeals[0].value / dealsCount[0].value) * 100 
-      : 0;
-
-    res.json({
-      leads: leadsCount[0].value,
-      deals: dealsCount[0].value,
-      revenue: totalRevenue[0].value || 0,
-      conversionRate: conversionRate.toFixed(2),
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+    const [lc] = await db.select({ count: count() }).from(leads);
+    const [ac] = await db.select({ count: count() }).from(deals).where(sql`status NOT IN ('completed','declined','cancelled')`);
+    const [cc] = await db.select({ count: count() }).from(deals).where(eq(deals.status, "completed"));
+    const [tp] = await db.select({ total: sql`COALESCE(SUM(total_paid),0)` }).from(deals).where(eq(deals.status, "completed"));
+    res.json({ leadsThisWeek: lc.count, activeDeals: ac.count, completedDeals: cc.count, conversionRate: lc.count > 0 ? Math.round((cc.count/lc.count)*100) : 0, revenueMTD: tp.total });
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 export default router;

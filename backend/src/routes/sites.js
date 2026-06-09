@@ -1,30 +1,22 @@
-import express from "express";
+import { Router } from "express";
 import { db } from "../db/index.js";
 import { sites } from "../db/schema.js";
-import { eq } from "drizzle-orm";
 import { authenticate } from "../middleware/auth.js";
+import { eq, desc } from "drizzle-orm";
 
-const router = express.Router();
+const router = Router();
+router.use(authenticate);
 
-router.get("/", authenticate, async (req, res) => {
-  try {
-    const allSites = await db.query.sites.findMany();
-    res.json(allSites);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+router.get("/", async (req, res) => {
+  try { const r = await db.select().from(sites).orderBy(desc(sites.createdAt)).limit(100); res.json(r); }
+  catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-router.get("/:id", authenticate, async (req, res) => {
+router.patch("/:id", async (req, res) => {
   try {
-    const site = await db.query.sites.findFirst({
-      where: eq(sites.id, req.params.id),
-    });
-    if (!site) return res.status(404).json({ error: "Site not found" });
+    const [site] = await db.update(sites).set({ ...req.body, updatedAt: "datetime('now')" }).where(eq(sites.id, req.params.id)).returning();
     res.json(site);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 export default router;
